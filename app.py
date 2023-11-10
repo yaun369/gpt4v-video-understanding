@@ -2,8 +2,10 @@ import cv2
 import base64
 import openai
 import os
+from dotenv import load_dotenv
 import requests
 
+load_dotenv()
 
 def handle_video(video_path):
     video = cv2.VideoCapture(video_path)
@@ -21,14 +23,14 @@ def handle_video(video_path):
     return base64Frames
 
 
-def run(base64Frames):
+def run(base64Frames, steps=10):
     PROMPT_MESSAGES = [
         {
             "role": "user",
             "content": [
-                "These are frames from a video that I want to upload. Generate a compelling description that I can upload along with the video.",
+                "These are frames from a video that I want to upload. Generate a compelling description that I can upload along with the video.MUST BE ANSWERED IN CHINESE, THIS IS VERY IMPORTANT TO ME.",
                 *map(lambda x: {"image": x, "resize": 768},
-                     base64Frames[0::10]),
+                     base64Frames[0::steps]),
             ],
         },
     ]
@@ -41,8 +43,11 @@ def run(base64Frames):
     }
 
     result = openai.ChatCompletion.create(**params)
-    print(result.choices[0].message.content)
+    text = result.choices[0].message.content
+    print(text)
+    return text
 
 
 if __name__ == "__main__":
     base64Frames = handle_video("data/cat.mp4")
+    run(base64Frames, 30)
