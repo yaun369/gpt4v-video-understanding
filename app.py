@@ -7,7 +7,8 @@ import requests
 
 load_dotenv()
 
-def handle_video(video_path):
+
+def run_by_video(video_path):
     video = cv2.VideoCapture(video_path)
 
     base64Frames = []
@@ -20,15 +21,23 @@ def handle_video(video_path):
 
     video.release()
     print(len(base64Frames), "frames read.")
-    return base64Frames
+    prompt = "这是一个视频的连续帧，视频的总时长是0:05，生成一个诙谐幽默的描述，作为这个视频的字幕，输出字幕格式，必须是中文，这对很重要"
+    return run(base64Frames, prompt, 30)
 
 
-def run(base64Frames, steps=10):
+def run_by_img(img_path):
+    with open(img_path, "rb") as f:
+        base64Frames = [base64.b64encode(f.read()).decode("utf-8")]
+    prompt = "这是一张关于12星座的描述图片，理解图片内容，并且生成一个简洁的短视频脚本，必须是中文，这对很重要"
+    return run(base64Frames, prompt, 1)
+
+
+def run(base64Frames, prompt, steps=10):
     PROMPT_MESSAGES = [
         {
             "role": "user",
             "content": [
-                "These are frames from a video that I want to upload. Generate a compelling description that I can upload along with the video.MUST BE ANSWERED IN CHINESE, THIS IS VERY IMPORTANT TO ME.",
+                prompt,
                 *map(lambda x: {"image": x, "resize": 768},
                      base64Frames[0::steps]),
             ],
@@ -49,5 +58,5 @@ def run(base64Frames, steps=10):
 
 
 if __name__ == "__main__":
-    base64Frames = handle_video("data/cat.mp4")
-    run(base64Frames, 30)
+    # run_by_video("data/cat.mp4")
+    run_by_img("data/2.png")
